@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Stüdyo Yönetim Sistemi</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3350;
+    --accent: #6c63ff;
+    --accent2: #a78bfa;
+    --green: #22c55e;
+    --red: #ef4444;
+    --yellow: #f59e0b;
+    --text: #e8eaf6;
+    --text2: #8892b0;
+    --text3: #4a5378;
+    --card-r: 16px;
+    --font: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; overflow-x: hidden; }
+
+  /* ── NAV ── */
+  .nav { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 20px; height: 60px; position: sticky; top: 0; z-index: 100; }
+  .nav-logo { font-size: 18px; font-weight: 700; color: var(--accent2); letter-spacing: -0.5px; margin-right: 32px; white-space: nowrap; }
+  .nav-logo span { color: var(--text2); font-weight: 400; }
+  .nav-tabs { display: flex; gap: 4px; flex: 1; overflow-x: auto; }
+  .nav-tab { padding: 8px 18px; border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; color: var(--text2); transition: all 0.18s; white-space: nowrap; border: none; background: none; }
+  .nav-tab:hover { background: var(--surface2); color: var(--text); }
+  .nav-tab.active { background: var(--accent); color: #fff; }
+
+  /* ── PAGES ── */
+  .page { display: none; padding: 24px 20px; max-width: 900px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  /* ── CARDS ── */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--card-r); padding: 20px; margin-bottom: 16px; }
+  .card-title { font-size: 13px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px; }
+
+  /* ── KPI GRID ── */
+  .kpi-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
+  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--card-r); padding: 16px; }
+  .kpi-val { font-size: 32px; font-weight: 700; color: var(--accent2); line-height: 1; }
+  .kpi-val.green { color: var(--green); }
+  .kpi-val.red { color: var(--red); }
+  .kpi-val.yellow { color: var(--yellow); }
+  .kpi-label { font-size: 12px; color: var(--text2); margin-top: 6px; }
+
+  /* ── BUTTONS ── */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 20px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #5a54e0; }
+  .btn-success { background: var(--green); color: #fff; }
+  .btn-success:hover { opacity: 0.85; }
+  .btn-danger { background: var(--red); color: #fff; }
+  .btn-danger:hover { opacity: 0.85; }
+  .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent2); }
+  .btn-sm { padding: 6px 14px; font-size: 13px; border-radius: 8px; }
+  .btn-xs { padding: 5px 10px; font-size: 12px; border-radius: 7px; }
+  .btn-full { width: 100%; }
+
+  /* ── FORM ── */
+  .form-row { margin-bottom: 14px; }
+  .form-row label { display: block; font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .form-row input, .form-row select, .form-row textarea {
+    width: 100%; padding: 11px 14px; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text); font-size: 15px; font-family: var(--font);
+    outline: none; transition: border-color 0.15s;
+  }
+  .form-row input:focus, .form-row select:focus, .form-row textarea:focus { border-color: var(--accent); }
+  .form-row textarea { resize: vertical; min-height: 80px; }
+  .form-row select option { background: var(--surface2); }
+
+  /* ── LIST ITEMS ── */
+  .list-item { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--surface2); border-radius: 12px; margin-bottom: 8px; cursor: pointer; transition: all 0.15s; border: 1px solid transparent; }
+  .list-item:hover { border-color: var(--accent); }
+  .list-item-info { flex: 1; min-width: 0; }
+  .list-item-name { font-size: 15px; font-weight: 600; color: var(--text); }
+  .list-item-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .list-item-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+  /* ── BADGE ── */
+  .badge { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  .badge-green { background: rgba(34,197,94,0.15); color: var(--green); }
+  .badge-red { background: rgba(239,68,68,0.15); color: var(--red); }
+  .badge-yellow { background: rgba(245,158,11,0.15); color: var(--yellow); }
+  .badge-purple { background: rgba(108,99,255,0.15); color: var(--accent2); }
+
+  /* ── AVATAR ── */
+  .avatar { width: 42px; height: 42px; border-radius: 12px; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #fff; flex-shrink: 0; }
+
+  /* ── DIVIDER ── */
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+  /* ── SECTION HEADER ── */
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .section-title { font-size: 18px; font-weight: 700; color: var(--text); }
+
+  /* ── MODAL ── */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; width: 100%; max-width: 480px; max-height: 85vh; overflow-y: auto; padding: 24px; }
+  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+  .modal-footer { display: flex; gap: 10px; margin-top: 20px; }
+
+  /* ── WIZARD ── */
+  .wizard-step { display: none; }
+  .wizard-step.active { display: block; }
+  .wizard-progress { display: flex; gap: 8px; margin-bottom: 20px; }
+  .wizard-dot { height: 4px; flex: 1; border-radius: 2px; background: var(--border); transition: background 0.3s; }
+  .wizard-dot.done { background: var(--accent); }
+
+  /* ── ATTENDANCE CARD ── */
+  .att-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; }
+  .att-btns { display: flex; gap: 6px; flex-shrink: 0; }
+  .att-btn { width: 40px; height: 40px; border-radius: 10px; border: 2px solid var(--border); background: none; font-size: 16px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; color: var(--text2); font-weight: 700; }
+  .att-btn.selected-plus { background: rgba(34,197,94,0.2); border-color: var(--green); color: var(--green); }
+  .att-btn.selected-minus { background: rgba(239,68,68,0.2); border-color: var(--red); color: var(--red); }
+  .att-btn.selected-ikame { background: rgba(245,158,11,0.2); border-color: var(--yellow); color: var(--yellow); }
+  .askida-icon { color: var(--red); font-size: 16px; }
+
+  /* ── NOTE WIZARD ── */
+  .note-progress { font-size: 12px; color: var(--text2); text-align: center; margin-bottom: 12px; }
+  .note-name { font-size: 22px; font-weight: 700; text-align: center; margin-bottom: 16px; color: var(--accent2); }
+
+  /* ── FINANS STRIP ── */
+  .finans-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .finans-item { background: var(--surface2); border-radius: 12px; padding: 14px; text-align: center; }
+  .finans-item .val { font-size: 20px; font-weight: 700; }
+  .finans-item .lbl { font-size: 11px; color: var(--text2); margin-top: 4px; }
+
+  /* ── TOAST ── */
+  #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 24px; font-size: 14px; font-weight: 600; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+  #toast.show { opacity: 1; }
+  #toast.success { border-color: var(--green); color: var(--green); }
+  #toast.error { border-color: var(--red); color: var(--red); }
+
+  /* ── PROFILE ── */
+  .profile-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+  .profile-avatar { width: 64px; height: 64px; border-radius: 18px; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .profile-name { font-size: 22px; font-weight: 700; }
+  .profile-sub { font-size: 13px; color: var(--text2); margin-top: 4px; }
+
+  .timeline-item { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .timeline-date { font-size: 12px; color: var(--text2); min-width: 80px; padding-top: 2px; }
+  .timeline-content { flex: 1; }
+  .timeline-badge { margin-bottom: 4px; }
+  .timeline-note { font-size: 13px; color: var(--text2); margin-top: 4px; }
+
+  /* ── EMPTY STATE ── */
+  .empty { text-align: center; padding: 40px 20px; color: var(--text3); }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-text { font-size: 15px; }
+
+  /* ── GROUP HEADER ── */
+  .group-chip { display: inline-flex; align-items: center; gap: 6px; background: rgba(108,99,255,0.15); border: 1px solid rgba(108,99,255,0.3); border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 600; color: var(--accent2); }
+
+  /* ── TABS inside page ── */
+  .inner-tabs { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; }
+  .inner-tab { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text2); background: var(--surface2); border: 1px solid var(--border); white-space: nowrap; }
+  .inner-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  @media (min-width: 600px) {
+    .kpi-grid { grid-template-columns: repeat(4, 1fr); }
+    .page { padding: 28px 32px; }
+  }
+  /* ── LOGIN SCREEN ── */
+  #login-screen {
+    position: fixed; inset: 0; background: var(--bg); z-index: 500;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  #login-screen.hidden { display: none; }
+  .login-box {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+    padding: 36px 28px; width: 100%; max-width: 360px;
+  }
+  .login-logo {
+    text-align: center; font-size: 22px; font-weight: 700; color: var(--accent2);
+    margin-bottom: 4px; letter-spacing: -0.5px;
+  }
+  .login-sub { text-align: center; font-size: 13px; color: var(--text2); margin-bottom: 28px; }
+  .login-error {
+    background: rgba(239,68,68,0.12); border: 1px solid var(--red); color: var(--red);
+    border-radius: 10px; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; display: none;
+  }
+  .login-error.show { display: block; }
+  #app-root.hidden { display: none; }
+
+  /* ── HAFTALIK TAKVİM ── */
+  .takvim-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .takvim-nav-label { font-size: 14px; font-weight: 600; color: var(--text2); }
+  .takvim-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .takvim-gun-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; }
+  .takvim-gun-card.bugun { border-color: var(--accent); background: rgba(108,99,255,0.06); }
+  .takvim-gun-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
+  .takvim-gun-isim { font-size: 15px; font-weight: 700; }
+  .takvim-gun-tarih { font-size: 12px; color: var(--text2); }
+  .takvim-ders-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--border); }
+  .takvim-ders-row:first-of-type { border-top: none; }
+  .takvim-ders-saat { font-size: 13px; font-weight: 700; color: var(--accent2); min-width: 50px; }
+  .takvim-ders-adi { font-size: 14px; flex: 1; }
+  .takvim-bos { font-size: 13px; color: var(--text3); padding: 4px 0; }
+
+  /* ── YAKLAŞAN ÖDEMELER ── */
+  .yaklasan-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .yaklasan-item:last-child { border-bottom: none; }
+  .yaklasan-gun-badge {
+    min-width: 44px; height: 44px; border-radius: 12px; background: var(--surface2);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-size: 11px; color: var(--text2); flex-shrink: 0;
+  }
+  .yaklasan-gun-badge .sayi { font-size: 16px; font-weight: 700; color: var(--accent2); line-height: 1; }
+  .yaklasan-gun-badge.bugun .sayi { color: var(--yellow); }
+
+  @media (min-width: 700px) {
+    .takvim-grid { grid-template-columns: repeat(7, 1fr); }
+    .takvim-gun-card { padding: 10px; }
+  }
+
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ GİRİŞ EKRANI ═══════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Stüdyo <span style="color:var(--text2);font-weight:400">YS</span></div>
+    <div class="login-sub">Devam etmek için giriş yapın</div>
+    <div class="login-error" id="login-error">Kullanıcı adı veya şifre hatalı</div>
+    <div class="form-row">
+      <label>Kullanıcı Adı</label>
+      <input type="text" id="login-username" autocomplete="username" placeholder="Kullanıcı adı">
+    </div>
+    <div class="form-row">
+      <label>Şifre</label>
+      <input type="password" id="login-password" autocomplete="current-password" placeholder="Şifre">
+    </div>
+    <button class="btn btn-primary btn-full" style="margin-top:8px;padding:13px" onclick="girisYap()">Giriş Yap</button>
+  </div>
+</div>
+
+<div id="app-root" class="hidden">
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-logo">Stüdyo <span>YS</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('dashboard')">📊 Panel</button>
+    <button class="nav-tab" onclick="showPage('takvim')">📅 Takvim</button>
+    <button class="nav-tab" onclick="showPage('yoklama')">✅ Yoklama</button>
+    <button class="nav-tab" onclick="showPage('uyeler')">👥 Üyeler</button>
+    <button class="nav-tab" onclick="showPage('gruplar')">🏫 Gruplar</button>
+    <button class="nav-tab" onclick="cikisYap()" style="margin-left:auto">🚪 Çıkış</button>
+  </div>
+</nav>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- ═══════════════════════════════ DASHBOARD ═══════════════════════════════ -->
+<div class="page active" id="page-dashboard">
+  <div class="section-header">
+    <div class="section-title">Günlük Panel</div>
+    <div id="dashboard-tarih" style="font-size:13px;color:var(--text2)"></div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-val" id="kpi-islendi">—</div><div class="kpi-label">İşlenen Ders</div></div>
+    <div class="kpi"><div class="kpi-val green" id="kpi-katilan">—</div><div class="kpi-label">Toplam Katılan</div></div>
+    <div class="kpi"><div class="kpi-val red" id="kpi-katilmayan">—</div><div class="kpi-label">Katılmayan</div></div>
+    <div class="kpi"><div class="kpi-val yellow" id="kpi-ciro">—</div><div class="kpi-label">Günlük Ciro ₺</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Finans Kırılımı</div>
+    <div class="finans-strip" id="finans-strip">
+      <div class="finans-item"><div class="val green" id="fin-nakit">₺0</div><div class="lbl">Nakit</div></div>
+      <div class="finans-item"><div class="val" style="color:var(--accent2)" id="fin-kart">₺0</div><div class="lbl">Kart</div></div>
+      <div class="finans-item"><div class="val yellow" id="fin-havale">₺0</div><div class="lbl">Havale</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Bugünkü Dersler</div>
+    <div id="dashboard-dersler"><div class="empty"><div class="empty-icon">📅</div><div class="empty-text">Bugün kayıtlı ders yok</div></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Üye Durumu</div>
+    <div style="display:flex;gap:16px;margin-bottom:12px;">
+      <div style="flex:1;text-align:center;background:var(--surface2);border-radius:10px;padding:12px">
+        <div style="font-size:28px;font-weight:700;color:var(--green)" id="kpi-aktif">—</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:4px">Aktif</div>
+      </div>
+      <div style="flex:1;text-align:center;background:var(--surface2);border-radius:10px;padding:12px">
+        <div style="font-size:28px;font-weight:700;color:var(--red)" id="kpi-askida">—</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:4px">Askıda</div>
+      </div>
+    </div>
+    <div id="askida-liste"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Yaklaşan Ödemeler (3 gün içinde)</div>
+    <div id="yaklasan-odeme-liste"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ TAKVİM ═══════════════════════════════ -->
+<div class="page" id="page-takvim">
+  <div class="section-header">
+    <div class="section-title">Haftalık Takvim</div>
+  </div>
+  <div class="takvim-nav">
+    <button class="btn btn-ghost btn-sm" onclick="takvimOncekiHafta()">← Önceki</button>
+    <div class="takvim-nav-label" id="takvim-hafta-label"></div>
+    <button class="btn btn-ghost btn-sm" onclick="takvimSonrakiHafta()">Sonraki →</button>
+  </div>
+  <div class="takvim-grid" id="takvim-grid"></div>
+</div>
+
+<!-- ═══════════════════════════════ YOKLAMA ═══════════════════════════════ -->
+<div class="page" id="page-yoklama">
+  <!-- Adım 0: Grup seç -->
+  <div class="wizard-step active" id="yoklama-step-0">
+    <div class="section-header">
+      <div class="section-title">Yoklama Başlat</div>
+      <div id="yoklama-tarih" style="font-size:13px;color:var(--text2)"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Grup Seçin</div>
+      <div id="yoklama-grup-liste"></div>
+    </div>
+  </div>
+
+  <!-- Adım 1: İşlendi / İptal -->
+  <div class="wizard-step" id="yoklama-step-1">
+    <div class="section-header">
+      <div class="section-title" id="yw-grup-adi">Grup Adı</div>
+      <button class="btn btn-ghost btn-sm" onclick="yoklamaGeriGrup()">← Geri</button>
+    </div>
+    <div class="card">
+      <p style="font-size:14px;color:var(--text2);margin-bottom:16px">Bu ders için durumu seçin:</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <button class="btn btn-success btn-full" style="padding:20px;font-size:17px" onclick="yoklamaDersSecim('islendi')">✅ Ders İşlendi</button>
+        <button class="btn btn-danger btn-full" style="padding:20px;font-size:17px" onclick="yoklamaDersSecim('iptal')">❌ İptal Edildi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Adım 1b: İptal gerekçe -->
+  <div class="wizard-step" id="yoklama-step-iptal">
+    <div class="section-header">
+      <div class="section-title">İptal Gerekçesi</div>
+      <button class="btn btn-ghost btn-sm" onclick="goToWizardStep('yoklama-step-1')">← Geri</button>
+    </div>
+    <div class="card">
+      <div class="form-row">
+        <label>İptal Gerekçesi</label>
+        <textarea id="iptal-gerekcesi" placeholder="Gerekçe girin..." rows="4"></textarea>
+      </div>
+      <button class="btn btn-danger btn-full" onclick="iptalKaydet()">Kaydet — Tüm Üyelere Not Düş</button>
+    </div>
+  </div>
+
+  <!-- Adım 2: Yoklama listesi -->
+  <div class="wizard-step" id="yoklama-step-2">
+    <div class="section-header">
+      <div class="section-title">Yoklama</div>
+      <button class="btn btn-ghost btn-sm" onclick="goToWizardStep('yoklama-step-1')">← Geri</button>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:12px">Her üye için durumu işaretleyin:</p>
+      <div id="att-liste"></div>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="yoklamaIleri()">İleri — Notlara Geç →</button>
+  </div>
+
+  <!-- Adım 3: Seans Notları -->
+  <div class="wizard-step" id="yoklama-step-3">
+    <div class="section-header">
+      <div class="section-title">Seans Notları</div>
+    </div>
+    <div class="card" id="not-card">
+      <div class="note-progress" id="not-progress"></div>
+      <div class="note-name" id="not-uye-adi"></div>
+      <div class="form-row">
+        <label>Seans Notu</label>
+        <textarea id="not-textarea" placeholder="Bu üye için seans notunu yazın..." rows="5"></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
+        <button class="btn btn-ghost" id="not-gec-btn" onclick="notGec()">Geç (Boş Bırak)</button>
+        <button class="btn btn-primary" onclick="notKaydetSonraki()">Kaydet ve Sıradaki →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Adım 4: Onay -->
+  <div class="wizard-step" id="yoklama-step-4">
+    <div class="card" style="text-align:center;padding:32px">
+      <div style="font-size:48px;margin-bottom:16px">📋</div>
+      <div style="font-size:20px;font-weight:700;margin-bottom:8px">Yoklama Hazır</div>
+      <div style="font-size:14px;color:var(--text2);margin-bottom:24px" id="ozet-text"></div>
+      <div id="ozet-liste" style="text-align:left;margin-bottom:20px"></div>
+      <button class="btn btn-success btn-full" style="padding:18px;font-size:17px" onclick="yoklamaSistemeKaydet()">💾 Sisteme Tamamen Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ ÜYELER ═══════════════════════════════ -->
+<div class="page" id="page-uyeler">
+  <div class="section-header">
+    <div class="section-title">Üyeler</div>
+    <button class="btn btn-primary btn-sm" onclick="openModal('uye-modal')">+ Yeni Üye</button>
+  </div>
+  <div style="margin-bottom:14px">
+    <input type="text" id="uye-arama" placeholder="🔍 Üye ara..." style="width:100%;padding:11px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:15px;outline:none" oninput="uyeFiltrele()">
+  </div>
+  <div class="inner-tabs">
+    <button class="inner-tab active" onclick="uyeTabSec('tumu',this)">Tümü</button>
+    <button class="inner-tab" onclick="uyeTabSec('aktif',this)">Aktif</button>
+    <button class="inner-tab" onclick="uyeTabSec('askida',this)">Askıda</button>
+  </div>
+  <div id="uye-liste"></div>
+</div>
+
+<!-- ÜYELER: Profil Görünümü -->
+<div class="page" id="page-profil">
+  <button class="btn btn-ghost btn-sm" style="margin-bottom:16px" onclick="showPage('uyeler');uyeleriYukle()">← Üyeler</button>
+  <div id="profil-icerik"></div>
+</div>
+
+<!-- ═══════════════════════════════ GRUPLAR ═══════════════════════════════ -->
+<div class="page" id="page-gruplar">
+  <div class="section-header">
+    <div class="section-title">Gruplar</div>
+    <button class="btn btn-primary btn-sm" onclick="openModal('grup-modal')">+ Yeni Grup</button>
+  </div>
+  <div id="grup-liste"></div>
+</div>
+
+
+<!-- ═══════════════ MODALS ═══════════════ -->
+
+<!-- Grup Modal -->
+<div class="modal-overlay" id="grup-modal">
+  <div class="modal">
+    <div class="modal-title" id="grup-modal-title">Yeni Grup</div>
+    <input type="hidden" id="grup-edit-id">
+    <div class="form-row"><label>Grup Adı</label><input type="text" id="grup-adi" placeholder="Örn: Sabah Yoga"></div>
+    <div class="form-row"><label>Ders Saati</label><input type="time" id="grup-saat"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal('grup-modal')">İptal</button>
+      <button class="btn btn-primary" style="flex:2" onclick="grupKaydet()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- Üye Modal -->
+<div class="modal-overlay" id="uye-modal">
+  <div class="modal">
+    <div class="modal-title" id="uye-modal-title">Yeni Üye</div>
+    <input type="hidden" id="uye-edit-id">
+    <div class="form-row"><label>Ad Soyad</label><input type="text" id="uye-ad" placeholder="Ad Soyad"></div>
+    <div class="form-row"><label>Telefon</label><input type="tel" id="uye-tel" placeholder="0555 000 0000"></div>
+    <div class="form-row"><label>Grup</label>
+      <select id="uye-grup">
+        <option value="">— Grup Seçin —</option>
+      </select>
+    </div>
+    <div class="form-row"><label>Periyodik Ödeme Tarihi</label><input type="date" id="uye-odeme-tarihi"></div>
+    <div class="form-row"><label>Toplam Borç (₺)</label><input type="number" id="uye-borc" placeholder="0" step="0.01"></div>
+    <div class="form-row" id="uye-durum-row" style="display:none">
+      <label>Durum</label>
+      <select id="uye-durum">
+        <option value="Aktif">Aktif</option>
+        <option value="Askıda">Askıda</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal('uye-modal')">İptal</button>
+      <button class="btn btn-primary" style="flex:2" onclick="uyeKaydet()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tahsilat Modal -->
+<div class="modal-overlay" id="tahsilat-modal">
+  <div class="modal">
+    <div class="modal-title">Tahsilat Yap</div>
+    <input type="hidden" id="tahsilat-uye-id">
+    <div id="tahsilat-uye-bilgi" style="background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:16px;font-size:14px"></div>
+    <div class="form-row"><label>Miktar (₺)</label><input type="number" id="tahsilat-miktar" placeholder="0.00" step="0.01"></div>
+    <div class="form-row"><label>Ödeme Türü</label>
+      <select id="tahsilat-tur">
+        <option value="Nakit">Nakit</option>
+        <option value="Kart">Kart</option>
+        <option value="Havale">Havale</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal('tahsilat-modal')">İptal</button>
+      <button class="btn btn-success" style="flex:2" onclick="tahsilatYap()">Tahsilatı Onayla</button>
+    </div>
+  </div>
+</div>
+
+<!-- Transfer Modal -->
+<div class="modal-overlay" id="transfer-modal">
+  <div class="modal">
+    <div class="modal-title">Grup Transferi</div>
+    <input type="hidden" id="transfer-uye-id">
+    <div class="form-row"><label>Yeni Grup</label>
+      <select id="transfer-grup">
+        <option value="">— Grup Seçin —</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal('transfer-modal')">İptal</button>
+      <button class="btn btn-primary" style="flex:2" onclick="transferYap()">Transfer Et</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /#app-root -->
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+const state = {
+  gruplar: [],
+  uyeler: [],
+  uyeFiltre: 'tumu',
+  yoklama: {
+    grupId: null,
+    grupAdi: null,
+    tarih: null,
+    uyeler: [],       // [{id, ad_soyad, durum, katilim}]
+    notlar: [],       // [{uye_id, katilim_durumu, not_metni}] - geçici
+    notIndex: 0,
+    katildiListesi: [] // + olanların indexleri
+  }
+};
+
+// Bugünün tarihi
+const BUGUN = new Date().toISOString().split('T')[0];
+const BUGUN_TR = new Date().toLocaleDateString('tr-TR', {day:'numeric',month:'long',year:'numeric'});
+
+// ═══════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════
+async function api(url, opts = {}) {
+  const token = localStorage.getItem('auth_token');
+  const r = await fetch(url, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'x-auth-token': token } : {})
+    },
+    ...opts,
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+  if (r.status === 401) {
+    localStorage.removeItem('auth_token');
+    girisEkraniGoster();
+    throw new Error('Yetkisiz erişim');
+  }
+  return r.json();
+}
+
+function toast(msg, type = 'success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show ' + type;
+  setTimeout(() => el.className = '', 2800);
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function initials(name) {
+  return name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+}
+
+function formatTL(n) { return '₺' + Number(n || 0).toLocaleString('tr-TR', {minimumFractionDigits:2}); }
+
+// ═══════════════════════════════════════════════════════
+//  PAGE NAV
+// ═══════════════════════════════════════════════════════
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  const tabs = ['dashboard','takvim','yoklama','uyeler','gruplar'];
+  const idx = tabs.indexOf(id);
+  if (idx >= 0) document.querySelectorAll('.nav-tab')[idx].classList.add('active');
+
+  if (id === 'dashboard') dashboardYukle();
+  else if (id === 'takvim') takvimYukle();
+  else if (id === 'yoklama') yoklamaBaslat();
+  else if (id === 'uyeler') uyeleriYukle();
+  else if (id === 'gruplar') gruplariYukle();
+}
+
+// ═══════════════════════════════════════════════════════
+//  GİRİŞ / ÇIKIŞ
+// ═══════════════════════════════════════════════════════
+function girisEkraniGoster() {
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('app-root').classList.add('hidden');
+}
+
+function appGoster() {
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app-root').classList.remove('hidden');
+}
+
+async function girisYap() {
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errorEl = document.getElementById('login-error');
+  errorEl.classList.remove('show');
+
+  if (!username || !password) {
+    errorEl.textContent = 'Kullanıcı adı ve şifre zorunlu';
+    errorEl.classList.add('show');
+    return;
+  }
+
+  try {
+    const r = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await r.json();
+    if (data.success) {
+      localStorage.setItem('auth_token', data.token);
+      appGoster();
+      await uyeGrupSelectleriniDoldur();
+      dashboardYukle();
+    } else {
+      errorEl.textContent = data.error || 'Giriş başarısız';
+      errorEl.classList.add('show');
+    }
+  } catch (e) {
+    errorEl.textContent = 'Bağlantı hatası, tekrar deneyin';
+    errorEl.classList.add('show');
+  }
+}
+
+function cikisYap() {
+  localStorage.removeItem('auth_token');
+  girisEkraniGoster();
+  document.getElementById('login-username').value = '';
+  document.getElementById('login-password').value = '';
+}
+
+// Enter tuşu ile giriş yapma
+document.addEventListener('DOMContentLoaded', () => {
+  ['login-username', 'login-password'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') girisYap(); });
+  });
+});
+
+// ═══════════════════════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════════════════════
+async function dashboardYukle() {
+  document.getElementById('dashboard-tarih').textContent = BUGUN_TR;
+  const d = await api('/api/dashboard');
+
+  document.getElementById('kpi-islendi').textContent = d.islenmisDers;
+  const katilan = (d.seansStats?.toplam_katilan || 0) + (d.seansStats?.toplam_ikame || 0);
+  document.getElementById('kpi-katilan').textContent = katilan;
+  document.getElementById('kpi-katilmayan').textContent = d.seansStats?.toplam_katilmayan || 0;
+  document.getElementById('kpi-ciro').textContent = formatTL(d.toplamCiro).replace('₺','');
+
+  const nakit = d.finans.find(f => f.odeme_turu === 'Nakit');
+  const kart = d.finans.find(f => f.odeme_turu === 'Kart');
+  const havale = d.finans.find(f => f.odeme_turu === 'Havale');
+  document.getElementById('fin-nakit').textContent = formatTL(nakit?.toplam || 0);
+  document.getElementById('fin-kart').textContent = formatTL(kart?.toplam || 0);
+  document.getElementById('fin-havale').textContent = formatTL(havale?.toplam || 0);
+
+  document.getElementById('kpi-aktif').textContent = d.uyeDurum?.aktif || 0;
+  document.getElementById('kpi-askida').textContent = d.uyeDurum?.askida || 0;
+
+  // Dersler
+  const dersDiv = document.getElementById('dashboard-dersler');
+  if (!d.dersler || d.dersler.length === 0) {
+    dersDiv.innerHTML = `<div class="empty"><div class="empty-icon">📅</div><div class="empty-text">Bugün kayıtlı ders yok</div></div>`;
+  } else {
+    dersDiv.innerHTML = d.dersler.map(ders => `
+      <div class="list-item" style="cursor:default">
+        <div class="avatar" style="${ders.durum === 'İptal Edildi' ? 'background:var(--red)' : 'background:var(--accent)'}">${ders.saat || '—'}</div>
+        <div class="list-item-info">
+          <div class="list-item-name">${ders.grup_adi || 'Grup Silinmiş'}</div>
+          <div class="list-item-sub">
+            ${ders.durum === 'İşlendi'
+              ? `✅ İşlendi &nbsp;|&nbsp; ${(ders.stats?.katilan||0)+(ders.stats?.ikame||0)} katılan, ${ders.stats?.katilmayan||0} katılmayan`
+              : `❌ İptal — ${ders.iptal_gerekcesi || ''}`}
+          </div>
+        </div>
+        <span class="badge ${ders.durum === 'İşlendi' ? 'badge-green' : 'badge-red'}">${ders.durum}</span>
+      </div>
+    `).join('');
+  }
+
+  // Askıda liste
+  const askidaDiv = document.getElementById('askida-liste');
+  if (!d.askidakiUyeler || d.askidakiUyeler.length === 0) {
+    askidaDiv.innerHTML = '<div style="font-size:13px;color:var(--text2)">Askıda üye yok.</div>';
+  } else {
+    askidaDiv.innerHTML = d.askidakiUyeler.map(u => `
+      <div class="list-item" onclick="profilAc(${u.id})">
+        <div class="avatar" style="background:var(--red);font-size:14px">${initials(u.ad_soyad)}</div>
+        <div class="list-item-info">
+          <div class="list-item-name">${u.ad_soyad} <span style="color:var(--red)">⚠️</span></div>
+          <div class="list-item-sub">${u.grup_adi || 'Grubsuz'} &nbsp;|&nbsp; Borç: ${formatTL(u.toplam_borc)}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  yaklasanOdemeleriYukle();
+}
+
+async function yaklasanOdemeleriYukle() {
+  const liste = await api('/api/odemeler/yaklasan');
+  const el = document.getElementById('yaklasan-odeme-liste');
+  if (!liste || liste.length === 0) {
+    el.innerHTML = '<div style="font-size:13px;color:var(--text2)">Önümüzdeki 3 gün içinde ödeme tarihi gelen üye yok.</div>';
+    return;
+  }
+  const bugun = new Date(BUGUN + 'T00:00:00');
+  el.innerHTML = liste.map(u => {
+    const odemeTarih = new Date(u.odeme_tarihi + 'T00:00:00');
+    const farkGun = Math.round((odemeTarih - bugun) / (1000*60*60*24));
+    const bugunMu = farkGun === 0;
+    const etiket = bugunMu ? 'Bugün' : (farkGun === 1 ? 'Yarın' : farkGun + ' gün');
+    return `
+      <div class="yaklasan-item">
+        <div class="yaklasan-gun-badge ${bugunMu ? 'bugun' : ''}">
+          <div class="sayi">${bugunMu ? '!' : farkGun}</div>
+          <div>${bugunMu ? '' : 'gün'}</div>
+        </div>
+        <div class="list-item-info">
+          <div class="list-item-name">${u.ad_soyad}</div>
+          <div class="list-item-sub">${u.grup_adi || 'Grubsuz'} &nbsp;|&nbsp; ${etiket} — ${u.odeme_tarihi}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;font-size:13px;color:var(--text2)">${formatTL(u.toplam_borc)}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//  TAKVİM
+// ═══════════════════════════════════════════════════════
+const GUN_ISIMLERI = ['Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi','Pazar'];
+let takvimBaslangic = null; // o anki gösterilen haftanın pazartesi tarihi (YYYY-MM-DD)
+
+function pazartesiBul(tarihStr) {
+  const d = new Date(tarihStr + 'T00:00:00');
+  const gun = d.getDay();
+  const fark = gun === 0 ? -6 : 1 - gun;
+  d.setDate(d.getDate() + fark);
+  return d.toISOString().split('T')[0];
+}
+
+async function takvimYukle() {
+  if (!takvimBaslangic) takvimBaslangic = pazartesiBul(BUGUN);
+  const r = await api('/api/takvim/hafta?baslangic=' + takvimBaslangic);
+  renderTakvim(r);
+}
+
+function takvimOncekiHafta() {
+  const d = new Date(takvimBaslangic + 'T00:00:00');
+  d.setDate(d.getDate() - 7);
+  takvimBaslangic = d.toISOString().split('T')[0];
+  takvimYukle();
+}
+
+function takvimSonrakiHafta() {
+  const d = new Date(takvimBaslangic + 'T00:00:00');
+  d.setDate(d.getDate() + 7);
+  takvimBaslangic = d.toISOString().split('T')[0];
+  takvimYukle();
+}
+
+function renderTakvim(data) {
+  const baslangicTR = new Date(data.baslangic + 'T00:00:00').toLocaleDateString('tr-TR', {day:'numeric',month:'short'});
+  const bitisTR = new Date(data.bitis + 'T00:00:00').toLocaleDateString('tr-TR', {day:'numeric',month:'short',year:'numeric'});
+  document.getElementById('takvim-hafta-label').textContent = `${baslangicTR} — ${bitisTR}`;
+
+  const grid = document.getElementById('takvim-grid');
+  grid.innerHTML = data.takvim.map((gun, i) => {
+    const isBugun = gun.tarih === BUGUN;
+    const tarihTR = new Date(gun.tarih + 'T00:00:00').toLocaleDateString('tr-TR', {day:'numeric',month:'short'});
+    const dersHtml = gun.dersler.length === 0
+      ? '<div class="takvim-bos">Ders yok</div>'
+      : gun.dersler.map(d => `
+        <div class="takvim-ders-row">
+          <div class="takvim-ders-saat">${d.saat}</div>
+          <div class="takvim-ders-adi">${d.grup_adi}</div>
+          ${d.durum === 'İşlendi' ? '<span class="badge badge-green">✓</span>' :
+            d.durum === 'İptal Edildi' ? '<span class="badge badge-red">✗</span>' :
+            isBugun ? '<span class="badge badge-purple">●</span>' : ''}
+        </div>
+      `).join('');
+    return `
+      <div class="takvim-gun-card ${isBugun ? 'bugun' : ''}">
+        <div class="takvim-gun-header">
+          <div class="takvim-gun-isim">${GUN_ISIMLERI[i]}</div>
+          <div class="takvim-gun-tarih">${tarihTR}</div>
+        </div>
+        ${dersHtml}
+      </div>
+    `;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//  GRUPLAR
+// ═══════════════════════════════════════════════════════
+async function gruplariYukle() {
+  state.gruplar = await api('/api/gruplar');
+  const el = document.getElementById('grup-liste');
+  if (state.gruplar.length === 0) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🏫</div><div class="empty-text">Henüz grup eklenmemiş</div></div>`;
+    return;
+  }
+  el.innerHTML = state.gruplar.map(g => `
+    <div class="list-item">
+      <div class="avatar">${g.saat}</div>
+      <div class="list-item-info">
+        <div class="list-item-name">${g.grup_adi}</div>
+        <div class="list-item-sub">${g.uye_sayisi} üye</div>
+      </div>
+      <div class="list-item-actions">
+        <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();grupDuzenle(${g.id},'${escQ(g.grup_adi)}','${g.saat}')">✏️</button>
+        <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();grupSil(${g.id})">🗑</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function escQ(s) { return (s||'').replace(/'/g,"\\'"); }
+
+function grupEkleModal() {
+  document.getElementById('grup-modal-title').textContent = 'Yeni Grup';
+  document.getElementById('grup-edit-id').value = '';
+  document.getElementById('grup-adi').value = '';
+  document.getElementById('grup-saat').value = '';
+  openModal('grup-modal');
+}
+
+function grupDuzenle(id, adi, saat) {
+  document.getElementById('grup-modal-title').textContent = 'Grubu Düzenle';
+  document.getElementById('grup-edit-id').value = id;
+  document.getElementById('grup-adi').value = adi;
+  document.getElementById('grup-saat').value = saat;
+  openModal('grup-modal');
+}
+
+async function grupKaydet() {
+  const id = document.getElementById('grup-edit-id').value;
+  const adi = document.getElementById('grup-adi').value.trim();
+  const saat = document.getElementById('grup-saat').value;
+  if (!adi || !saat) { toast('Grup adı ve saat zorunlu', 'error'); return; }
+  if (id) {
+    await api('/api/gruplar/' + id, { method: 'PUT', body: { grup_adi: adi, saat } });
+    toast('Grup güncellendi');
+  } else {
+    await api('/api/gruplar', { method: 'POST', body: { grup_adi: adi, saat } });
+    toast('Grup eklendi');
+  }
+  closeModal('grup-modal');
+  gruplariYukle();
+  uyeGrupSelectleriniDoldur();
+}
+
+async function grupSil(id) {
+  if (!confirm('Bu grubu silmek istediğinize emin misiniz? Üyeler grubsuz kalacaktır.')) return;
+  await api('/api/gruplar/' + id, { method: 'DELETE' });
+  toast('Grup silindi');
+  gruplariYukle();
+}
+
+async function uyeGrupSelectleriniDoldur() {
+  const gruplar = await api('/api/gruplar');
+  state.gruplar = gruplar;
+  ['uye-grup', 'transfer-grup'].forEach(selId => {
+    const sel = document.getElementById(selId);
+    if (!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">— Grup Seçin —</option>' +
+      gruplar.map(g => `<option value="${g.id}">${g.grup_adi} (${g.saat})</option>`).join('');
+    if (cur) sel.value = cur;
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  ÜYELER
+// ═══════════════════════════════════════════════════════
+async function uyeleriYukle() {
+  state.uyeler = await api('/api/uyeler');
+  uyeListeRender();
+}
+
+function uyeTabSec(filtre, el) {
+  state.uyeFiltre = filtre;
+  document.querySelectorAll('.inner-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  uyeListeRender();
+}
+
+function uyeFiltrele() { uyeListeRender(); }
+
+function uyeListeRender() {
+  const arama = (document.getElementById('uye-arama')?.value || '').toLowerCase();
+  let liste = state.uyeler;
+  if (state.uyeFiltre === 'aktif') liste = liste.filter(u => u.durum === 'Aktif');
+  else if (state.uyeFiltre === 'askida') liste = liste.filter(u => u.durum === 'Askıda');
+  if (arama) liste = liste.filter(u => u.ad_soyad.toLowerCase().includes(arama));
+
+  const el = document.getElementById('uye-liste');
+  if (liste.length === 0) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">👤</div><div class="empty-text">Üye bulunamadı</div></div>`;
+    return;
+  }
+  el.innerHTML = liste.map(u => `
+    <div class="list-item" onclick="profilAc(${u.id})">
+      <div class="avatar" style="${u.durum === 'Askıda' ? 'background:var(--red)' : ''}">${initials(u.ad_soyad)}</div>
+      <div class="list-item-info">
+        <div class="list-item-name">${u.ad_soyad} ${u.durum === 'Askıda' ? '<span style="color:var(--red)">⚠️</span>' : ''}</div>
+        <div class="list-item-sub">${u.grup_adi || 'Grubsuz'} ${u.grup_saati ? '· ' + u.grup_saati : ''}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <span class="badge ${u.durum === 'Aktif' ? 'badge-green' : 'badge-red'}">${u.durum}</span>
+        ${u.toplam_borc > 0 ? `<div style="font-size:12px;color:var(--red);margin-top:4px">${formatTL(u.toplam_borc)}</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function uyeEkleModal() {
+  document.getElementById('uye-modal-title').textContent = 'Yeni Üye';
+  document.getElementById('uye-edit-id').value = '';
+  document.getElementById('uye-ad').value = '';
+  document.getElementById('uye-tel').value = '';
+  document.getElementById('uye-grup').value = '';
+  document.getElementById('uye-odeme-tarihi').value = '';
+  document.getElementById('uye-borc').value = '';
+  document.getElementById('uye-durum-row').style.display = 'none';
+  uyeGrupSelectleriniDoldur();
+  openModal('uye-modal');
+}
+
+async function uyeKaydet() {
+  const id = document.getElementById('uye-edit-id').value;
+  const body = {
+    grup_id: document.getElementById('uye-grup').value || null,
+    ad_soyad: document.getElementById('uye-ad').value.trim(),
+    telefon: document.getElementById('uye-tel').value.trim(),
+    odeme_tarihi: document.getElementById('uye-odeme-tarihi').value || null,
+    toplam_borc: parseFloat(document.getElementById('uye-borc').value) || 0,
+    durum: document.getElementById('uye-durum').value || 'Aktif'
+  };
+  if (!body.ad_soyad) { toast('Ad soyad zorunlu', 'error'); return; }
+  if (id) {
+    await api('/api/uyeler/' + id, { method: 'PUT', body });
+    toast('Üye güncellendi');
+  } else {
+    await api('/api/uyeler', { method: 'POST', body });
+    toast('Üye eklendi');
+  }
+  closeModal('uye-modal');
+  uyeleriYukle();
+}
+
+// ── PROFİL ──
+async function profilAc(id) {
+  showPage('profil');
+  const u = await api('/api/uyeler/' + id);
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+
+  const el = document.getElementById('profil-icerik');
+  el.innerHTML = `
+    <div class="profile-header">
+      <div class="profile-avatar" style="${u.durum === 'Askıda' ? 'background:var(--red)' : ''}">${initials(u.ad_soyad)}</div>
+      <div>
+        <div class="profile-name">${u.ad_soyad} ${u.durum === 'Askıda' ? '⚠️' : ''}</div>
+        <div class="profile-sub">${u.grup_adi || 'Grubsuz'} ${u.grup_saati ? '· ' + u.grup_saati : ''}</div>
+        <div style="margin-top:6px"><span class="badge ${u.durum === 'Aktif' ? 'badge-green' : 'badge-red'}">${u.durum}</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Bilgiler</div>
+      <div style="display:grid;gap:10px">
+        <div style="display:flex;justify-content:space-between;font-size:14px">
+          <span style="color:var(--text2)">Telefon</span><span>${u.telefon || '—'}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:14px">
+          <span style="color:var(--text2)">Kayıt Tarihi</span><span>${u.kayit_tarihi}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:14px">
+          <span style="color:var(--text2)">Ödeme Tarihi</span><span>${u.odeme_tarihi || '—'}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:14px">
+          <span style="color:var(--text2)">Toplam Borç</span>
+          <span style="font-weight:700;color:${u.toplam_borc > 0 ? 'var(--red)' : 'var(--green)'}">${formatTL(u.toplam_borc)}</span>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-success btn-sm" onclick="tahsilatModalAc(${u.id},'${escQ(u.ad_soyad)}',${u.toplam_borc})">💰 Tahsilat Yap</button>
+        <button class="btn btn-ghost btn-sm" onclick="uyeDuzenleModal(${u.id})">✏️ Düzenle</button>
+        <button class="btn btn-ghost btn-sm" onclick="transferModalAc(${u.id})">🔄 Transfer</button>
+        <button class="btn btn-danger btn-sm" onclick="uyeSil(${u.id})">🗑 Sil</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Seans Geçmişi</div>
+      ${u.notlar && u.notlar.length > 0
+        ? u.notlar.map(n => `
+          <div class="timeline-item">
+            <div class="timeline-date">${n.tarih || '—'}</div>
+            <div class="timeline-content">
+              <div class="timeline-badge">
+                <span class="badge ${n.katilim_durumu === '+' ? 'badge-green' : n.katilim_durumu === 'İkame' ? 'badge-yellow' : 'badge-red'}">
+                  ${n.katilim_durumu === '+' ? '✓ Katıldı' : n.katilim_durumu === 'İkame' ? '↔ İkame' : '✗ Katılmadı'}
+                </span>
+                ${n.grup_adi ? `<span style="font-size:11px;color:var(--text2);margin-left:6px">${n.grup_adi}</span>` : ''}
+              </div>
+              ${n.not_metni ? `<div class="timeline-note">${n.not_metni}</div>` : ''}
+            </div>
+          </div>
+        `).join('')
+        : '<div class="empty"><div class="empty-icon">📝</div><div class="empty-text">Henüz seans kaydı yok</div></div>'
+      }
+    </div>
+
+    <div class="card">
+      <div class="card-title">Tahsilat Dökümü (Kasa)</div>
+      ${u.tahsilatlar && u.tahsilatlar.length > 0
+        ? u.tahsilatlar.map(t => `
+          <div class="timeline-item">
+            <div class="timeline-date">${t.tarih}</div>
+            <div class="timeline-content">
+              <div style="font-weight:700;color:var(--green)">${formatTL(t.miktar)}</div>
+              <div class="timeline-note">${t.odeme_turu}</div>
+            </div>
+          </div>
+        `).join('')
+        : '<div class="empty"><div class="empty-icon">💳</div><div class="empty-text">Tahsilat kaydı yok</div></div>'
+      }
+    </div>
+  `;
+}
+
+async function uyeDuzenleModal(id) {
+  const u = await api('/api/uyeler/' + id);
+  await uyeGrupSelectleriniDoldur();
+  document.getElementById('uye-modal-title').textContent = 'Üyeyi Düzenle';
+  document.getElementById('uye-edit-id').value = id;
+  document.getElementById('uye-ad').value = u.ad_soyad;
+  document.getElementById('uye-tel').value = u.telefon || '';
+  document.getElementById('uye-grup').value = u.grup_id || '';
+  document.getElementById('uye-odeme-tarihi').value = u.odeme_tarihi || '';
+  document.getElementById('uye-borc').value = u.toplam_borc || 0;
+  document.getElementById('uye-durum').value = u.durum;
+  document.getElementById('uye-durum-row').style.display = 'block';
+  openModal('uye-modal');
+}
+
+async function uyeSil(id) {
+  if (!confirm('Bu üyeyi silmek istediğinize emin misiniz?')) return;
+  await api('/api/uyeler/' + id, { method: 'DELETE' });
+  toast('Üye silindi');
+  showPage('uyeler');
+  uyeleriYukle();
+}
+
+function tahsilatModalAc(id, ad, borc) {
+  document.getElementById('tahsilat-uye-id').value = id;
+  document.getElementById('tahsilat-uye-bilgi').innerHTML = `
+    <b>${ad}</b><br>
+    <span style="color:var(--text2)">Mevcut Borç:</span> <b style="color:var(--red)">${formatTL(borc)}</b>
+  `;
+  document.getElementById('tahsilat-miktar').value = '';
+  document.getElementById('tahsilat-tur').value = 'Nakit';
+  openModal('tahsilat-modal');
+}
+
+async function tahsilatYap() {
+  const id = document.getElementById('tahsilat-uye-id').value;
+  const miktar = parseFloat(document.getElementById('tahsilat-miktar').value);
+  const tur = document.getElementById('tahsilat-tur').value;
+  if (!miktar || miktar <= 0) { toast('Geçerli bir miktar girin', 'error'); return; }
+  const r = await api('/api/uyeler/' + id + '/tahsilat', { method: 'POST', body: { miktar, odeme_turu: tur } });
+  if (r.success) {
+    toast('Tahsilat kaydedildi ✓');
+    closeModal('tahsilat-modal');
+    profilAc(id);
+  } else {
+    toast(r.error || 'Hata', 'error');
+  }
+}
+
+function transferModalAc(id) {
+  document.getElementById('transfer-uye-id').value = id;
+  uyeGrupSelectleriniDoldur().then(() => openModal('transfer-modal'));
+}
+
+async function transferYap() {
+  const id = document.getElementById('transfer-uye-id').value;
+  const grupId = document.getElementById('transfer-grup').value;
+  if (!grupId) { toast('Grup seçin', 'error'); return; }
+  const uye = await api('/api/uyeler/' + id);
+  await api('/api/uyeler/' + id, { method: 'PUT', body: {
+    ...uye,
+    grup_id: grupId
+  }});
+  toast('Transfer tamamlandı');
+  closeModal('transfer-modal');
+  profilAc(id);
+}
+
+// ═══════════════════════════════════════════════════════
+//  YOKLAMA WIZARD
+// ═══════════════════════════════════════════════════════
+function goToWizardStep(stepId) {
+  document.querySelectorAll('.wizard-step').forEach(s => s.classList.remove('active'));
+  document.getElementById(stepId).classList.add('active');
+}
+
+async function yoklamaBaslat() {
+  document.getElementById('yoklama-tarih').textContent = BUGUN_TR;
+  const gruplar = await api('/api/gruplar');
+  state.gruplar = gruplar;
+  const el = document.getElementById('yoklama-grup-liste');
+  if (gruplar.length === 0) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🏫</div><div class="empty-text">Önce grup ekleyin</div></div>`;
+    return;
+  }
+  // Mevcut yoklama durumu
+  const bugunDersler = await api('/api/dersler?tarih=' + BUGUN);
+  el.innerHTML = gruplar.map(g => {
+    const ders = bugunDersler.find(d => d.grup_id === g.id);
+    const durum = ders ? ders.durum : null;
+    return `
+      <div class="list-item" onclick="yoklamaGrupSec(${g.id},'${escQ(g.grup_adi)}')">
+        <div class="avatar">${g.saat}</div>
+        <div class="list-item-info">
+          <div class="list-item-name">${g.grup_adi}</div>
+          <div class="list-item-sub">${g.uye_sayisi} üye</div>
+        </div>
+        ${durum
+          ? `<span class="badge ${durum === 'İşlendi' ? 'badge-green' : 'badge-red'}">${durum}</span>`
+          : '<span class="badge badge-purple">Bekliyor</span>'
+        }
+      </div>
+    `;
+  }).join('');
+  goToWizardStep('yoklama-step-0');
+}
+
+async function yoklamaGrupSec(grupId, grupAdi) {
+  state.yoklama.grupId = grupId;
+  state.yoklama.grupAdi = grupAdi;
+  state.yoklama.tarih = BUGUN;
+  document.getElementById('yw-grup-adi').textContent = grupAdi;
+
+  // Üyeleri yükle
+  const uyeler = await api('/api/uyeler/grup/' + grupId);
+  state.yoklama.uyeler = uyeler.map(u => ({ ...u, katilim: null }));
+  state.yoklama.notlar = [];
+  state.yoklama.notIndex = 0;
+
+  goToWizardStep('yoklama-step-1');
+}
+
+function yoklamaGeriGrup() {
+  goToWizardStep('yoklama-step-0');
+}
+
+function yoklamaDersSecim(tip) {
+  if (tip === 'iptal') {
+    document.getElementById('iptal-gerekcesi').value = '';
+    goToWizardStep('yoklama-step-iptal');
+  } else {
+    renderAttListe();
+    goToWizardStep('yoklama-step-2');
+  }
+}
+
+async function iptalKaydet() {
+  const gerekcesi = document.getElementById('iptal-gerekcesi').value.trim();
+  if (!gerekcesi) { toast('Gerekçe zorunlu', 'error'); return; }
+  const r = await api('/api/dersler/iptal', {
+    method: 'POST',
+    body: { grup_id: state.yoklama.grupId, tarih: state.yoklama.tarih, iptal_gerekcesi: gerekcesi }
+  });
+  if (r.success) {
+    toast('İptal kaydedildi, tüm üyelere not düşüldü');
+    goToWizardStep('yoklama-step-0');
+    yoklamaBaslat();
+  } else {
+    toast(r.error || 'Hata', 'error');
+  }
+}
+
+function renderAttListe() {
+  const el = document.getElementById('att-liste');
+  el.innerHTML = state.yoklama.uyeler.map((u, i) => `
+    <div class="att-card" id="att-${i}">
+      <div style="flex:1">
+        <div style="font-size:15px;font-weight:600">${u.ad_soyad} ${u.durum === 'Askıda' ? '<span class="askida-icon">⚠️</span>' : ''}</div>
+        ${u.durum === 'Askıda' ? '<div style="font-size:11px;color:var(--red)">Ödeme bekleniyor</div>' : ''}
+      </div>
+      <div class="att-btns">
+        <button class="att-btn" id="att-btn-plus-${i}" onclick="attSec(${i},'+')">+</button>
+        <button class="att-btn" id="att-btn-minus-${i}" onclick="attSec(${i},'-')">−</button>
+        <button class="att-btn" id="att-btn-ikame-${i}" onclick="attSec(${i},'İkame')" style="font-size:12px">İK</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function attSec(i, durum) {
+  state.yoklama.uyeler[i].katilim = durum;
+  const btns = ['plus','minus','ikame'];
+  btns.forEach(b => {
+    const btn = document.getElementById(`att-btn-${b}-${i}`);
+    if (btn) btn.className = 'att-btn';
+  });
+  const map = { '+': 'plus', '-': 'minus', 'İkame': 'ikame' };
+  const btn = document.getElementById(`att-btn-${map[durum]}-${i}`);
+  if (btn) btn.className = `att-btn selected-${map[durum]}`;
+}
+
+function yoklamaIleri() {
+  // Herkesin işaretli olup olmadığını kontrol et
+  const isaretlenmemis = state.yoklama.uyeler.filter(u => !u.katilim);
+  if (isaretlenmemis.length > 0) {
+    toast(`${isaretlenmemis.length} üye işaretlenmedi`, 'error');
+    return;
+  }
+
+  // Katılan (+) olanları not sırasına al (İkame notsuz geçilir)
+  state.yoklama.katildiListesi = state.yoklama.uyeler
+    .map((u, i) => ({ ...u, origIdx: i }))
+    .filter(u => u.katilim === '+');
+
+  // notlar'ı önceden tümü için doldur
+  state.yoklama.notlar = state.yoklama.uyeler.map(u => ({
+    uye_id: u.id,
+    katilim_durumu: u.katilim,
+    not_metni: null
+  }));
+
+  state.yoklama.notIndex = 0;
+
+  if (state.yoklama.katildiListesi.length === 0) {
+    // Hiç katılan yoksa direkt onay ekranına
+    yoklamaOzetGoster();
+    return;
+  }
+  renderNotAdimi();
+  goToWizardStep('yoklama-step-3');
+}
+
+function renderNotAdimi() {
+  const idx = state.yoklama.notIndex;
+  const katildilar = state.yoklama.katildiListesi;
+  if (idx >= katildilar.length) {
+    yoklamaOzetGoster();
+    return;
+  }
+  const uye = katildilar[idx];
+  document.getElementById('not-progress').textContent = `${idx + 1} / ${katildilar.length}`;
+  document.getElementById('not-uye-adi').textContent = uye.ad_soyad;
+  document.getElementById('not-textarea').value = '';
+
+  // Daha önce kaydedilen notu göster (tarayıcı kapanmasına karşı localStorage)
+  const lsKey = `not_${state.yoklama.grupId}_${BUGUN}_${uye.id}`;
+  const savedNote = localStorage.getItem(lsKey);
+  if (savedNote) document.getElementById('not-textarea').value = savedNote;
+}
+
+function notKaydetSonraki() {
+  const idx = state.yoklama.notIndex;
+  const katildilar = state.yoklama.katildiListesi;
+  const uye = katildilar[idx];
+  const notMetni = document.getElementById('not-textarea').value.trim();
+
+  // Geçici kaydet (localStorage)
+  const lsKey = `not_${state.yoklama.grupId}_${BUGUN}_${uye.id}`;
+  localStorage.setItem(lsKey, notMetni);
+
+  // state'e yaz
+  const idx2 = state.yoklama.notlar.findIndex(n => n.uye_id === uye.id);
+  if (idx2 >= 0) state.yoklama.notlar[idx2].not_metni = notMetni;
+
+  state.yoklama.notIndex++;
+  renderNotAdimi();
+}
+
+function notGec() {
+  state.yoklama.notIndex++;
+  renderNotAdimi();
+}
+
+function yoklamaOzetGoster() {
+  const katilan = state.yoklama.notlar.filter(n => n.katilim_durumu === '+' || n.katilim_durumu === 'İkame').length;
+  const katilmayan = state.yoklama.notlar.filter(n => n.katilim_durumu === '-').length;
+  document.getElementById('ozet-text').textContent =
+    `${katilan} katılan, ${katilmayan} katılmayan — Sisteme kaydetmeye hazır`;
+
+  const ozetListe = document.getElementById('ozet-liste');
+  ozetListe.innerHTML = state.yoklama.notlar.map(n => {
+    const uye = state.yoklama.uyeler.find(u => u.id === n.uye_id);
+    return `
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+        <span class="badge ${n.katilim_durumu === '+' ? 'badge-green' : n.katilim_durumu === 'İkame' ? 'badge-yellow' : 'badge-red'}">${n.katilim_durumu}</span>
+        <span style="font-size:14px">${uye?.ad_soyad || '—'}</span>
+        ${n.not_metni ? `<span style="font-size:12px;color:var(--text2);margin-left:auto;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${n.not_metni}</span>` : ''}
+      </div>
+    `;
+  }).join('');
+
+  goToWizardStep('yoklama-step-4');
+}
+
+async function yoklamaSistemeKaydet() {
+  const r = await api('/api/dersler/isle', {
+    method: 'POST',
+    body: {
+      grup_id: state.yoklama.grupId,
+      tarih: state.yoklama.tarih,
+      notlar: state.yoklama.notlar
+    }
+  });
+  if (r.success) {
+    // LocalStorage temizle
+    state.yoklama.katildiListesi.forEach(u => {
+      localStorage.removeItem(`not_${state.yoklama.grupId}_${BUGUN}_${u.id}`);
+    });
+    toast('Yoklama başarıyla kaydedildi! ✓');
+    goToWizardStep('yoklama-step-0');
+    yoklamaBaslat();
+  } else {
+    toast(r.error || 'Kayıt hatası', 'error');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  MODAL DIŞINA TIKLA KAPAT
+// ═══════════════════════════════════════════════════════
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('open');
+  });
+});
+
+// ─── Üye Modal'dan "Yeni Üye" buton bağlantısı ───
+document.querySelectorAll('[onclick="openModal(\'uye-modal\')"]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    uyeGrupSelectleriniDoldur();
+    document.getElementById('uye-edit-id').value = '';
+    document.getElementById('uye-ad').value = '';
+    document.getElementById('uye-tel').value = '';
+    document.getElementById('uye-grup').value = '';
+    document.getElementById('uye-odeme-tarihi').value = '';
+    document.getElementById('uye-borc').value = '';
+    document.getElementById('uye-durum-row').style.display = 'none';
+    document.getElementById('uye-modal-title').textContent = 'Yeni Üye';
+  });
+});
+
+// ─── Grup Modal buton bağlantısı ───
+document.querySelectorAll('[onclick="openModal(\'grup-modal\')"]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.getElementById('grup-modal-title').textContent = 'Yeni Grup';
+    document.getElementById('grup-edit-id').value = '';
+    document.getElementById('grup-adi').value = '';
+    document.getElementById('grup-saat').value = '';
+  });
+});
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+(async () => {
+  const token = localStorage.getItem('auth_token');
+  if (!token) {
+    girisEkraniGoster();
+    return;
+  }
+  try {
+    appGoster();
+    await uyeGrupSelectleriniDoldur();
+    dashboardYukle();
+  } catch (e) {
+    // api() zaten 401 durumunda login ekranini gosteriyor
+  }
+})();
+</script>
+</body>
+</html>
