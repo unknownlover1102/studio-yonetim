@@ -174,18 +174,93 @@
     .kpi-grid { grid-template-columns: repeat(4, 1fr); }
     .page { padding: 28px 32px; }
   }
+  /* ── LOGIN SCREEN ── */
+  #login-screen {
+    position: fixed; inset: 0; background: var(--bg); z-index: 500;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  #login-screen.hidden { display: none; }
+  .login-box {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+    padding: 36px 28px; width: 100%; max-width: 360px;
+  }
+  .login-logo {
+    text-align: center; font-size: 22px; font-weight: 700; color: var(--accent2);
+    margin-bottom: 4px; letter-spacing: -0.5px;
+  }
+  .login-sub { text-align: center; font-size: 13px; color: var(--text2); margin-bottom: 28px; }
+  .login-error {
+    background: rgba(239,68,68,0.12); border: 1px solid var(--red); color: var(--red);
+    border-radius: 10px; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; display: none;
+  }
+  .login-error.show { display: block; }
+  #app-root.hidden { display: none; }
+
+  /* ── HAFTALIK TAKVİM ── */
+  .takvim-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .takvim-nav-label { font-size: 14px; font-weight: 600; color: var(--text2); }
+  .takvim-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .takvim-gun-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; }
+  .takvim-gun-card.bugun { border-color: var(--accent); background: rgba(108,99,255,0.06); }
+  .takvim-gun-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
+  .takvim-gun-isim { font-size: 15px; font-weight: 700; }
+  .takvim-gun-tarih { font-size: 12px; color: var(--text2); }
+  .takvim-ders-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--border); }
+  .takvim-ders-row:first-of-type { border-top: none; }
+  .takvim-ders-saat { font-size: 13px; font-weight: 700; color: var(--accent2); min-width: 50px; }
+  .takvim-ders-adi { font-size: 14px; flex: 1; }
+  .takvim-bos { font-size: 13px; color: var(--text3); padding: 4px 0; }
+
+  /* ── YAKLAŞAN ÖDEMELER ── */
+  .yaklasan-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .yaklasan-item:last-child { border-bottom: none; }
+  .yaklasan-gun-badge {
+    min-width: 44px; height: 44px; border-radius: 12px; background: var(--surface2);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-size: 11px; color: var(--text2); flex-shrink: 0;
+  }
+  .yaklasan-gun-badge .sayi { font-size: 16px; font-weight: 700; color: var(--accent2); line-height: 1; }
+  .yaklasan-gun-badge.bugun .sayi { color: var(--yellow); }
+
+  @media (min-width: 700px) {
+    .takvim-grid { grid-template-columns: repeat(7, 1fr); }
+    .takvim-gun-card { padding: 10px; }
+  }
+
 </style>
 </head>
 <body>
 
+<!-- ═══════════════════════════════ GİRİŞ EKRANI ═══════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Stüdyo <span style="color:var(--text2);font-weight:400">YS</span></div>
+    <div class="login-sub">Devam etmek için giriş yapın</div>
+    <div class="login-error" id="login-error">Kullanıcı adı veya şifre hatalı</div>
+    <div class="form-row">
+      <label>Kullanıcı Adı</label>
+      <input type="text" id="login-username" autocomplete="username" placeholder="Kullanıcı adı">
+    </div>
+    <div class="form-row">
+      <label>Şifre</label>
+      <input type="password" id="login-password" autocomplete="current-password" placeholder="Şifre">
+    </div>
+    <button class="btn btn-primary btn-full" style="margin-top:8px;padding:13px" onclick="girisYap()">Giriş Yap</button>
+  </div>
+</div>
+
+<div id="app-root" class="hidden">
+
 <!-- NAV -->
 <nav class="nav">
-  <div class="nav-logo">Stüdyo <span>TUGBA</span></div>
+  <div class="nav-logo">Stüdyo <span>YS</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('dashboard')">📊 Panel</button>
+    <button class="nav-tab" onclick="showPage('takvim')">📅 Takvim</button>
     <button class="nav-tab" onclick="showPage('yoklama')">✅ Yoklama</button>
     <button class="nav-tab" onclick="showPage('uyeler')">👥 Üyeler</button>
     <button class="nav-tab" onclick="showPage('gruplar')">🏫 Gruplar</button>
+    <button class="nav-tab" onclick="cikisYap()" style="margin-left:auto">🚪 Çıkış</button>
   </div>
 </nav>
 
@@ -234,6 +309,24 @@
     </div>
     <div id="askida-liste"></div>
   </div>
+
+  <div class="card">
+    <div class="card-title">Yaklaşan Ödemeler (3 gün içinde)</div>
+    <div id="yaklasan-odeme-liste"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ TAKVİM ═══════════════════════════════ -->
+<div class="page" id="page-takvim">
+  <div class="section-header">
+    <div class="section-title">Haftalık Takvim</div>
+  </div>
+  <div class="takvim-nav">
+    <button class="btn btn-ghost btn-sm" onclick="takvimOncekiHafta()">← Önceki</button>
+    <div class="takvim-nav-label" id="takvim-hafta-label"></div>
+    <button class="btn btn-ghost btn-sm" onclick="takvimSonrakiHafta()">Sonraki →</button>
+  </div>
+  <div class="takvim-grid" id="takvim-grid"></div>
 </div>
 
 <!-- ═══════════════════════════════ YOKLAMA ═══════════════════════════════ -->
@@ -439,6 +532,7 @@
   </div>
 </div>
 
+</div><!-- /#app-root -->
 
 <script>
 // ═══════════════════════════════════════════════════════
@@ -467,11 +561,20 @@ const BUGUN_TR = new Date().toLocaleDateString('tr-TR', {day:'numeric',month:'lo
 //  HELPERS
 // ═══════════════════════════════════════════════════════
 async function api(url, opts = {}) {
+  const token = localStorage.getItem('auth_token');
   const r = await fetch(url, {
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'x-auth-token': token } : {})
+    },
     ...opts,
     body: opts.body ? JSON.stringify(opts.body) : undefined
   });
+  if (r.status === 401) {
+    localStorage.removeItem('auth_token');
+    girisEkraniGoster();
+    throw new Error('Yetkisiz erişim');
+  }
   return r.json();
 }
 
@@ -498,15 +601,78 @@ function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
-  const tabs = ['dashboard','yoklama','uyeler','gruplar'];
+  const tabs = ['dashboard','takvim','yoklama','uyeler','gruplar'];
   const idx = tabs.indexOf(id);
   if (idx >= 0) document.querySelectorAll('.nav-tab')[idx].classList.add('active');
 
   if (id === 'dashboard') dashboardYukle();
+  else if (id === 'takvim') takvimYukle();
   else if (id === 'yoklama') yoklamaBaslat();
   else if (id === 'uyeler') uyeleriYukle();
   else if (id === 'gruplar') gruplariYukle();
 }
+
+// ═══════════════════════════════════════════════════════
+//  GİRİŞ / ÇIKIŞ
+// ═══════════════════════════════════════════════════════
+function girisEkraniGoster() {
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('app-root').classList.add('hidden');
+}
+
+function appGoster() {
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app-root').classList.remove('hidden');
+}
+
+async function girisYap() {
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errorEl = document.getElementById('login-error');
+  errorEl.classList.remove('show');
+
+  if (!username || !password) {
+    errorEl.textContent = 'Kullanıcı adı ve şifre zorunlu';
+    errorEl.classList.add('show');
+    return;
+  }
+
+  try {
+    const r = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await r.json();
+    if (data.success) {
+      localStorage.setItem('auth_token', data.token);
+      appGoster();
+      await uyeGrupSelectleriniDoldur();
+      dashboardYukle();
+    } else {
+      errorEl.textContent = data.error || 'Giriş başarısız';
+      errorEl.classList.add('show');
+    }
+  } catch (e) {
+    errorEl.textContent = 'Bağlantı hatası, tekrar deneyin';
+    errorEl.classList.add('show');
+  }
+}
+
+function cikisYap() {
+  localStorage.removeItem('auth_token');
+  girisEkraniGoster();
+  document.getElementById('login-username').value = '';
+  document.getElementById('login-password').value = '';
+}
+
+// Enter tuşu ile giriş yapma
+document.addEventListener('DOMContentLoaded', () => {
+  ['login-username', 'login-password'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') girisYap(); });
+  });
+});
 
 // ═══════════════════════════════════════════════════════
 //  DASHBOARD
@@ -567,6 +733,103 @@ async function dashboardYukle() {
       </div>
     `).join('');
   }
+
+  yaklasanOdemeleriYukle();
+}
+
+async function yaklasanOdemeleriYukle() {
+  const liste = await api('/api/odemeler/yaklasan');
+  const el = document.getElementById('yaklasan-odeme-liste');
+  if (!liste || liste.length === 0) {
+    el.innerHTML = '<div style="font-size:13px;color:var(--text2)">Önümüzdeki 3 gün içinde ödeme tarihi gelen üye yok.</div>';
+    return;
+  }
+  const bugun = new Date(BUGUN + 'T00:00:00');
+  el.innerHTML = liste.map(u => {
+    const odemeTarih = new Date(u.odeme_tarihi + 'T00:00:00');
+    const farkGun = Math.round((odemeTarih - bugun) / (1000*60*60*24));
+    const bugunMu = farkGun === 0;
+    const etiket = bugunMu ? 'Bugün' : (farkGun === 1 ? 'Yarın' : farkGun + ' gün');
+    return `
+      <div class="yaklasan-item">
+        <div class="yaklasan-gun-badge ${bugunMu ? 'bugun' : ''}">
+          <div class="sayi">${bugunMu ? '!' : farkGun}</div>
+          <div>${bugunMu ? '' : 'gün'}</div>
+        </div>
+        <div class="list-item-info">
+          <div class="list-item-name">${u.ad_soyad}</div>
+          <div class="list-item-sub">${u.grup_adi || 'Grubsuz'} &nbsp;|&nbsp; ${etiket} — ${u.odeme_tarihi}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;font-size:13px;color:var(--text2)">${formatTL(u.toplam_borc)}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//  TAKVİM
+// ═══════════════════════════════════════════════════════
+const GUN_ISIMLERI = ['Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi','Pazar'];
+let takvimBaslangic = null; // o anki gösterilen haftanın pazartesi tarihi (YYYY-MM-DD)
+
+function pazartesiBul(tarihStr) {
+  const d = new Date(tarihStr + 'T00:00:00');
+  const gun = d.getDay();
+  const fark = gun === 0 ? -6 : 1 - gun;
+  d.setDate(d.getDate() + fark);
+  return d.toISOString().split('T')[0];
+}
+
+async function takvimYukle() {
+  if (!takvimBaslangic) takvimBaslangic = pazartesiBul(BUGUN);
+  const r = await api('/api/takvim/hafta?baslangic=' + takvimBaslangic);
+  renderTakvim(r);
+}
+
+function takvimOncekiHafta() {
+  const d = new Date(takvimBaslangic + 'T00:00:00');
+  d.setDate(d.getDate() - 7);
+  takvimBaslangic = d.toISOString().split('T')[0];
+  takvimYukle();
+}
+
+function takvimSonrakiHafta() {
+  const d = new Date(takvimBaslangic + 'T00:00:00');
+  d.setDate(d.getDate() + 7);
+  takvimBaslangic = d.toISOString().split('T')[0];
+  takvimYukle();
+}
+
+function renderTakvim(data) {
+  const baslangicTR = new Date(data.baslangic + 'T00:00:00').toLocaleDateString('tr-TR', {day:'numeric',month:'short'});
+  const bitisTR = new Date(data.bitis + 'T00:00:00').toLocaleDateString('tr-TR', {day:'numeric',month:'short',year:'numeric'});
+  document.getElementById('takvim-hafta-label').textContent = `${baslangicTR} — ${bitisTR}`;
+
+  const grid = document.getElementById('takvim-grid');
+  grid.innerHTML = data.takvim.map((gun, i) => {
+    const isBugun = gun.tarih === BUGUN;
+    const tarihTR = new Date(gun.tarih + 'T00:00:00').toLocaleDateString('tr-TR', {day:'numeric',month:'short'});
+    const dersHtml = gun.dersler.length === 0
+      ? '<div class="takvim-bos">Ders yok</div>'
+      : gun.dersler.map(d => `
+        <div class="takvim-ders-row">
+          <div class="takvim-ders-saat">${d.saat}</div>
+          <div class="takvim-ders-adi">${d.grup_adi}</div>
+          ${d.durum === 'İşlendi' ? '<span class="badge badge-green">✓</span>' :
+            d.durum === 'İptal Edildi' ? '<span class="badge badge-red">✗</span>' :
+            isBugun ? '<span class="badge badge-purple">●</span>' : ''}
+        </div>
+      `).join('');
+    return `
+      <div class="takvim-gun-card ${isBugun ? 'bugun' : ''}">
+        <div class="takvim-gun-header">
+          <div class="takvim-gun-isim">${GUN_ISIMLERI[i]}</div>
+          <div class="takvim-gun-tarih">${tarihTR}</div>
+        </div>
+        ${dersHtml}
+      </div>
+    `;
+  }).join('');
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1144,8 +1407,18 @@ document.querySelectorAll('[onclick="openModal(\'grup-modal\')"]').forEach(btn =
 //  INIT
 // ═══════════════════════════════════════════════════════
 (async () => {
-  await uyeGrupSelectleriniDoldur();
-  dashboardYukle();
+  const token = localStorage.getItem('auth_token');
+  if (!token) {
+    girisEkraniGoster();
+    return;
+  }
+  try {
+    appGoster();
+    await uyeGrupSelectleriniDoldur();
+    dashboardYukle();
+  } catch (e) {
+    // api() zaten 401 durumunda login ekranini gosteriyor
+  }
 })();
 </script>
 </body>

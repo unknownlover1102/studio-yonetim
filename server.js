@@ -1,12 +1,48 @@
 const express = require('express');
 const path = require('path');
+const crypto = require('crypto');
 const { initDb, runQuery, allQuery, getQuery } = require('./database');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+
+// ── GİRİŞ BİLGİLERİ ──
+const AUTH_USER = process.env.AUTH_USER || 'tugbayildiz';
+const AUTH_PASS = process.env.AUTH_PASS || 'kaankocam54';
+
+// Basit oturum token deposu (sunucu hafızasında tutulur)
+const activeSessions = new Set();
+
+function generateToken() {
+  return crypto.randomBytes(32).toString('hex');
+}
 
 app.use(express.json());
+
+// ── GİRİŞ ENDPOINT'İ (auth kontrolünden önce, herkese açık) ──
+app.post('/api/login', (req, res) => {
+  const { username, password } = req.body;
+  if (username === AUTH_USER && password === AUTH_PASS) {
+    const token = generateToken();
+    activeSessions.add(token);
+    res.json({ success: true, token });
+  } else {
+    res.status(401).json({ success: false, error: 'Kullanıcı adı veya şifre hatalı' });
+  }
+});
+
+// ── AUTH MIDDLEWARE: /api/* altındaki diğer her şeyi korur ──
+app.use('/api', (req, res, next) => {
+  if (req.path === '/login') return next();
+  const token = req.headers['x-auth-token'];
+  if (token && activeSessions.has(token)) {
+    return next();
+  }
+  res.status(401).json({ error: 'Yetkisiz erişim. Lütfen giriş yapın.' });
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
+
 
 // ── BAŞLANGIÇTA: Askı kontrol fonksiyonu ──
 async function kontrolOdemeAskilari() {
@@ -276,6 +312,87 @@ app.post('/api/dersler/isle', async (req, res) => {
     }
 
     res.json({ success: true, dersId });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ══════════════════════════════════════════
+//  HAFTALIK TAKVİM
+// ══════════════════════════════════════════
+
+app.get('/api/takvim/hafta', async (req, res) => {
+  // ?baslangic=YYYY-MM-DD (haftanın pazartesi günü). Verilmezse bu haftanın pazartesisi alınır.
+  try {
+    let baslangic = req.query.baslangic;
+    if (!baslangic) {
+      const bugun = new Date();
+      const gun = bugun.getDay(); // 0=Pazar, 1=Pazartesi...
+      const farkPazartesi = gun === 0 ? -6 : 1 - gun;
+      const pazartesi = new Date(bugun);
+      pazartesi.setDate(bugun.getDate() + farkPazartesi);
+      baslangic = pazartesi.toISOString().split('T')[0];
+    }
+
+    const baslangicTarih = new Date(baslangic + 'T00:00:00');
+    const gunler = [];
+    for (let i = 0; i < 7; i++) {
+      const gun = new Date(baslangicTarih);
+      gun.setDate(baslangicTarih.getDate() + i);
+      gunler.push(gun.toISOString().split('T')[0]);
+    }
+    const bitis = gunler[6];
+
+    const kayitliDersler = await allQuery(`
+      SELECT d.*, g.grup_adi, g.saat
+      FROM dersler d
+      LEFT JOIN gruplar g ON d.grup_id = g.id
+      WHERE d.tarih >= ? AND d.tarih <= ?
+    `, [baslangic, bitis]);
+
+    const gruplar = await allQuery('SELECT * FROM gruplar ORDER BY saat');
+
+    const haftaTakvimi = gunler.map(tarih => {
+      const gunlukDersler = gruplar.map(g => {
+        const kayit = kayitliDersler.find(d => d.tarih === tarih && d.grup_id === g.id);
+        return {
+          grup_id: g.id,
+          grup_adi: g.grup_adi,
+          saat: g.saat,
+          durum: kayit ? kayit.durum : 'Bekliyor',
+          ders_id: kayit ? kayit.id : null
+        };
+      });
+      return { tarih, dersler: gunlukDersler };
+    });
+
+    res.json({ baslangic, bitis, takvim: haftaTakvimi });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ══════════════════════════════════════════
+//  YAKLAŞAN ÖDEMELER
+// ══════════════════════════════════════════
+
+app.get('/api/odemeler/yaklasan', async (req, res) => {
+  try {
+    const bugun = new Date();
+    const ucGunSonra = new Date(bugun);
+    ucGunSonra.setDate(bugun.getDate() + 3);
+
+    const bugunStr = bugun.toISOString().split('T')[0];
+    const ucGunSonraStr = ucGunSonra.toISOString().split('T')[0];
+
+    const yaklasanlar = await allQuery(`
+      SELECT u.id, u.ad_soyad, u.telefon, u.odeme_tarihi, u.toplam_borc, g.grup_adi
+      FROM uyeler u
+      LEFT JOIN gruplar g ON u.grup_id = g.id
+      WHERE u.durum = 'Aktif'
+        AND u.odeme_tarihi IS NOT NULL
+        AND u.odeme_tarihi >= ?
+        AND u.odeme_tarihi <= ?
+      ORDER BY u.odeme_tarihi ASC
+    `, [bugunStr, ucGunSonraStr]);
+
+    res.json(yaklasanlar);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
