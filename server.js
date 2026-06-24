@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const { initDb, runQuery, allQuery, getQuery } = require('./database');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
 // ── GİRİŞ BİLGİLERİ ──
 const AUTH_USER = process.env.AUTH_USER || 'tugbayildiz';
